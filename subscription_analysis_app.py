@@ -7,7 +7,7 @@ import streamlit as st
 def extract_transactions_from_pdf(pdf_file):
     transactions = []
     date_pattern = r"(\d{1,2} \w{3}, \d{4})"
-    amount_pattern = r"([-+]\d{1,3}(?:,\d{3})*\.\d{2})"
+    amount_pattern = r"([-+]?\d{1,3}(?:,\d{3})*\.\d{2})"
 
     with pdfplumber.open(pdf_file) as pdf:
         for page in pdf.pages:
@@ -116,12 +116,9 @@ if df is not None and not df.empty:
     st.dataframe(sub_df)
 
     # 📊 Category-wise Spending
-    if "Category" in df.columns:
-        category_spending = df.groupby("Category")["Amount"].sum().abs()
-        if not category_spending.empty:
-            st.write("### 📊 Spending by Category")
-            st.bar_chart(category_spending)
-        else:
-            st.write("No categorized transactions available.")
+    category_spending = df.groupby("Category")["Amount"].sum().abs()
+    if not category_spending.empty:
+        st.write("### 📊 Spending by Category")
+        st.bar_chart(category_spending)
     else:
-        st.write("⚠️ Error: 'Category' column is missing.")
+        st.write("No categorized transactions available.")
