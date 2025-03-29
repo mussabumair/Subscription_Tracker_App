@@ -2,6 +2,7 @@ import pandas as pd
 import pdfplumber
 import re
 import streamlit as st
+import base64
 
 # Function to extract transactions from PDF
 def extract_transactions_from_pdf(pdf_file):
@@ -129,3 +130,24 @@ if df is not None and not df.empty:
         st.bar_chart(category_spending)
     else:
         st.write("No categorized transactions available.")
+
+def add_local_background(image_file):
+    with open(image_file, "rb") as image:
+        encoded_string = base64.b64encode(image.read()).decode()
+
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url("data:image/png;base64,{encoded_string}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+# Call the function before rendering Streamlit elements
+add_local_background("bg-image.png")  # Change this to your actual file name
