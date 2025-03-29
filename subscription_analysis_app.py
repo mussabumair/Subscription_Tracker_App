@@ -41,6 +41,19 @@ def detect_subscriptions(df):
     df["is_subscription"] = df["Description"].str.contains('|'.join(subscription_keywords), case=False, na=False)
     return df[df["is_subscription"]]
 
+def categorize_transactions(df):
+    categories = {
+        "Entertainment": ["netflix", "spotify", "youtube", "disney+"],
+        "Shopping": ["amazon", "ebay"],
+        "Utilities": ["electric", "water", "internet"],
+    }
+    df["Category"] = "Other"
+    for category, keywords in categories.items():
+        df.loc[df["Description"].str.contains("|".join(keywords), case=False, na=False), "Category"] = category
+    return df
+
+
+
 # Streamlit UI
 st.title("Subscription Spending Tracker")
 
@@ -79,6 +92,18 @@ if df is not None and not df.empty:
 
     st.write(f"### Total Subscription Spending: PKR {total_spent:.2f}")
     st.dataframe(sub_df)
+
+
+budget = st.number_input("💰 Set Monthly Budget (PKR)", min_value=0, value=5000)
+if total_spent > budget:
+    st.warning(f"⚠️ You have exceeded your budget of PKR {budget}!")
+else:
+    st.success(f"✅ You are within your budget of PKR {budget}.")
+
+category_spending = df.groupby("Category")["Amount"].sum()
+st.write("### 📊 Spending by Category")
+st.bar_chart(category_spending)
+
 
     # Plot Monthly Spending
     if not sub_df.empty:
