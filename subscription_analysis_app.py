@@ -42,15 +42,20 @@ def detect_subscriptions(df):
     df["is_subscription"] = df["Description"].str.contains('|'.join(subscription_keywords), case=False, na=False)
     return df[df["is_subscription"]]
 
+# Function to categorize transactions
 def categorize_transactions(df):
     categories = {
         "Entertainment": ["netflix", "spotify", "youtube", "disney+"],
         "Shopping": ["amazon", "ebay"],
         "Utilities": ["electric", "water", "internet"],
     }
-    df["Category"] = "Other"
+    df["Description"] = df["Description"].astype(str).str.lower()  # ✅ Convert to lowercase string
+    df["Category"] = "Other"  # Default category
+    
     for category, keywords in categories.items():
-        df.loc[df["Description"].str.contains("|".join(keywords), case=False, na=False), "Category"] = category
+        mask = df["Description"].str.contains("|".join(keywords), case=False, na=False)
+        df.loc[mask, "Category"] = category  # Assign category if keyword matches
+    
     return df
 
 # Streamlit UI
@@ -100,14 +105,25 @@ if df is not None and not df.empty:
         st.success(f"✅ You are within your budget of PKR {budget}.")
 
     # ✅ Now category-wise spending won't break
-    category_spending = df.groupby("Category")["Amount"].sum()
-    st.write("### 📊 Spending by Category")
-    st.bar_chart(category_spending)
+    if "Category" in df.columns:
+        category_spending = df.groupby("Category")["Amount"].sum()
+        if not category_spending.empty:
+            st.write("### 📊 Spending by Category")
+            st.bar_chart(category_spending)
+        else:
+            st.write("⚠️ No categorized transactions found.")
+    else:
+        st.write("⚠️ Categorization failed. Please check transaction descriptions.")
 
     # ✅ Fix indentation for Monthly Spending Chart
     if not sub_df.empty:
+        sub_df = sub_df.dropna(subset=["Date"])  # ✅ Ensure valid dates
         sub_df["Month"] = sub_df["Date"].dt.to_period("M")
         monthly_spending = sub_df.groupby("Month")["Amount"].sum()
 
         st.write("### Monthly Subscription Spending")
         st.line_chart(monthly_spending)
+
+# ✅ Debugging Output for Raw Data
+st.write("### 🔍 Raw Data Preview")
+st.dataframe(df.head(10))  # Show first 10 rows for debugging
