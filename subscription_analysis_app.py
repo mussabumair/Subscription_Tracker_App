@@ -2,7 +2,7 @@ import pandas as pd
 import pdfplumber
 import re
 import matplotlib.pyplot as plt
-import streamlit as st
+import streamlit as st  # ✅ Added missing import
 
 # Function to extract transactions from PDF
 def extract_transactions_from_pdf(pdf_file):
@@ -53,8 +53,6 @@ def categorize_transactions(df):
         df.loc[df["Description"].str.contains("|".join(keywords), case=False, na=False), "Category"] = category
     return df
 
-
-
 # Streamlit UI
 st.title("Subscription Spending Tracker")
 
@@ -88,25 +86,25 @@ elif option == "Enter Manually":
 
 # Process and Display Data
 if df is not None and not df.empty:
+    df = categorize_transactions(df)  # ✅ Ensure transactions are categorized first
     sub_df = detect_subscriptions(df)
     total_spent = sub_df["Amount"].sum()
 
     st.write(f"### Total Subscription Spending: PKR {total_spent:.2f}")
     st.dataframe(sub_df)
 
+    budget = st.number_input("💰 Set Monthly Budget (PKR)", min_value=0, value=5000)
+    if total_spent > budget:
+        st.warning(f"⚠️ You have exceeded your budget of PKR {budget}!")
+    else:
+        st.success(f"✅ You are within your budget of PKR {budget}.")
 
-budget = st.number_input("💰 Set Monthly Budget (PKR)", min_value=0, value=5000)
-if total_spent > budget:
-    st.warning(f"⚠️ You have exceeded your budget of PKR {budget}!")
-else:
-    st.success(f"✅ You are within your budget of PKR {budget}.")
+    # ✅ Now category-wise spending won't break
+    category_spending = df.groupby("Category")["Amount"].sum()
+    st.write("### 📊 Spending by Category")
+    st.bar_chart(category_spending)
 
-category_spending = df.groupby("Category")["Amount"].sum()
-st.write("### 📊 Spending by Category")
-st.bar_chart(category_spending)
-
-
-    # Plot Monthly Spending
+    # ✅ Fix indentation for Monthly Spending Chart
     if not sub_df.empty:
         sub_df["Month"] = sub_df["Date"].dt.to_period("M")
         monthly_spending = sub_df.groupby("Month")["Amount"].sum()
