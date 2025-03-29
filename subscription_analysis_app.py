@@ -105,12 +105,6 @@ if df is not None and not df.empty:
     st.write("### 📅 Monthly Spending Summary")
     st.dataframe(monthly_spending)
 
-    # Show warning if over budget
-    over_budget = monthly_spending[monthly_spending["Total Spent"] > budget]
-    if not over_budget.empty:
-        st.write("### 🚨 Over Budget Months")
-        st.dataframe(over_budget)
-    
     # 📊 Show Subscription Spending Data
     st.write(f"### 💰 Total Subscription Spending: PKR {total_spent:.2f}")
     st.dataframe(sub_df)
