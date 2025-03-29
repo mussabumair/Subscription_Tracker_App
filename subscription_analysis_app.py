@@ -51,7 +51,26 @@ def detect_subscriptions(df):
     subscription_keywords = ["netflix", "spotify", "amazon prime", "youtube premium", "apple music", "hulu", "disney+", "patreon"]
     df["is_subscription"] = df["Description"].str.contains('|'.join(subscription_keywords), case=False, na=False)
     return df[df["is_subscription"]]
+def add_local_background(image_file):
+    with open(image_file, "rb") as image:
+        encoded_string = base64.b64encode(image.read()).decode()
 
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url("data:image/png;base64,{encoded_string}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+# Call the function before rendering Streamlit elements
+add_local_background("bg-image.png")  # Change this to your actual file name
 # Streamlit UI
 st.title("📊 Subscription Spending Tracker")
 
@@ -130,24 +149,3 @@ if df is not None and not df.empty:
         st.bar_chart(category_spending)
     else:
         st.write("No categorized transactions available.")
-
-def add_local_background(image_file):
-    with open(image_file, "rb") as image:
-        encoded_string = base64.b64encode(image.read()).decode()
-
-    st.markdown(
-        f"""
-        <style>
-        .stApp {{
-            background-image: url("data:image/png;base64,{encoded_string}");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-# Call the function before rendering Streamlit elements
-add_local_background("bg-image.png")  # Change this to your actual file name
