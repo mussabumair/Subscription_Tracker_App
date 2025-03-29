@@ -98,16 +98,18 @@ if df is not None and not df.empty:
     df["Month"] = df["Date"].dt.to_period("M")
     monthly_spending = df.groupby("Month")["Amount"].sum()
 
-    # Show warning if over budget
-    for month, amount in monthly_spending.items():
-        if amount > budget:
-            st.warning(f"⚠️ You exceeded your budget of PKR {budget} in {month} with PKR {amount} spent!")
-        else:
-            st.success(f"✅ You stayed within your budget of PKR {budget} in {month}, spending PKR {amount}.")
-
+    # 📅 Display Monthly Spending Table
     st.write("### 📅 Monthly Spending Summary")
-    st.bar_chart(monthly_spending)
+    monthly_spending_df = monthly_spending.reset_index()
+    monthly_spending_df.columns = ["Month", "Total Spent"]
+    st.dataframe(monthly_spending_df)
 
+    # Show warning if over budget
+    over_budget = monthly_spending_df[monthly_spending_df["Total Spent"] > budget]
+    if not over_budget.empty:
+        st.warning("⚠️ You exceeded your budget in the following months:")
+        st.dataframe(over_budget)
+    
     # 📊 Show Subscription Spending Data
     st.write(f"### 💰 Total Subscription Spending: PKR {total_spent:.2f}")
     st.dataframe(sub_df)
