@@ -89,7 +89,7 @@ if df is not None and not df.empty:
     df = categorize_transactions(df)
 
     # 💰 Budget Section
-    budget = st.number_input("💰 Set Monthly Budget (PKR)", min_value=0, value=5000)
+    budget = st.number_input("💰 Set Monthly Budget (PKR)", min_value=0, value=0)
 
     # Detect subscriptions
     sub_df = detect_subscriptions(df)
