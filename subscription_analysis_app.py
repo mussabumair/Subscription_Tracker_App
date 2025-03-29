@@ -32,19 +32,6 @@ def extract_transactions_from_pdf(pdf_file):
 
     return df
 
-# Function to categorize transactions
-def categorize_transactions(df):
-    categories = {
-        "Entertainment": ["netflix", "spotify", "youtube", "disney+"],
-        "Shopping": ["amazon", "ebay"],
-        "Utilities": ["electric", "water", "internet"],
-    }
-    df["Category"] = "Other"
-    for category, keywords in categories.items():
-        mask = df["Description"].str.lower().str.contains("|".join(keywords), case=False, na=False)
-        df.loc[mask, "Category"] = category
-    return df
-
 # Function to detect subscriptions
 def detect_subscriptions(df):
     subscription_keywords = ["netflix", "spotify", "amazon prime", "youtube premium", "apple music", "hulu", "disney+", "patreon"]
@@ -87,32 +74,29 @@ elif option == "Enter Manually":
 
 # Ensure df is available before processing
 if df is not None and not df.empty:
-    # Categorize transactions before processing
-    df = categorize_transactions(df)
-    
     # Detect subscriptions
     sub_df = detect_subscriptions(df)
-    total_spent = sub_df["Amount"].sum() if not sub_df.empty else 0
+    total_sub_spent = sub_df["Amount"].sum() if not sub_df.empty else 0
 
     # 📅 Monthly Spending Summary (Only Debited Amounts)
-    df = df[df["Amount"] < 0]  # Ensure only debits are considered
-    df["Month"] = df["Date"].dt.to_period("M")
-    monthly_spending = df.groupby("Month")["Amount"].sum().reset_index()
+    expense_df = df[df["Amount"] < 0]  # Ensure only debits are considered
+    expense_df["Month"] = expense_df["Date"].dt.to_period("M")
+    monthly_spending = expense_df.groupby("Month")["Amount"].sum().reset_index()
     monthly_spending.columns = ["Month", "Total Spent"]
     monthly_spending["Total Spent"] = monthly_spending["Total Spent"].abs()  # Convert to positive values
 
     # 📅 Display Monthly Spending Table
     st.write("### 📅 Monthly Spending Summary")
     st.dataframe(monthly_spending)
+    
+    # 💰 Compare Monthly Spending to Budget
+    if not monthly_spending.empty:
+        over_budget = monthly_spending[monthly_spending["Total Spent"] > budget]
+        if not over_budget.empty:
+            st.warning("⚠️ Some months exceeded the budget!")
+        else:
+            st.success("✅ All months are within the budget.")
 
     # 📊 Show Subscription Spending Data
-    st.write(f"### 💰 Total Subscription Spending: PKR {total_spent:.2f}")
+    st.write(f"### 💰 Total Subscription Spending: PKR {total_sub_spent:.2f}")
     st.dataframe(sub_df)
-
-    # 📊 Category-wise Spending
-    category_spending = df.groupby("Category")["Amount"].sum().abs()
-    if not category_spending.empty:
-        st.write("### 📊 Spending by Category")
-        st.bar_chart(category_spending)
-    else:
-        st.write("No categorized transactions available.")
