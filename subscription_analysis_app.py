@@ -102,11 +102,26 @@ if df is not None and not df.empty:
     # 📅 Display Monthly Spending Table
     st.write("### 📅 Monthly Spending Summary")
     st.dataframe(monthly_spending)
-
+    
+    # 🚨 Budget Exceeded Check
+    budget_exceeded = monthly_spending[monthly_spending["Total Spent"] > budget]
+    if not budget_exceeded.empty:
+        st.warning("⚠️ Budget exceeded for the following months:")
+        st.dataframe(budget_exceeded)
+    
     # 📊 Show Subscription Spending Data
     st.write(f"### 💰 Total Subscription Spending: PKR {total_spent:.2f}")
     st.dataframe(sub_df)
-
+    
+    # 📅 Monthly Subscription Spending
+    if not sub_df.empty:
+        sub_df["Month"] = sub_df["Date"].dt.to_period("M")
+        monthly_subscription_spending = sub_df.groupby("Month")["Amount"].sum()
+        
+        if not monthly_subscription_spending.empty:
+            st.write("### 📅 Monthly Subscription Spending")
+            st.bar_chart(monthly_subscription_spending)
+    
     # 📊 Category-wise Spending
     category_spending = df.groupby("Category")["Amount"].sum()
     if not category_spending.empty:
