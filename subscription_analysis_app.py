@@ -40,12 +40,11 @@ def categorize_transactions(df):
         "Utilities": ["electric", "water", "internet"],
     }
     df["Category"] = "Other"  # Default category
+    df["Description"] = df["Description"].str.lower()  # Convert to lowercase for better matching
+
     for category, keywords in categories.items():
-        mask = df["Description"].str.lower().str.contains("|".join(keywords), case=False, na=False)
+        mask = df["Description"].str.contains("|".join(keywords), case=False, na=False)
         df.loc[mask, "Category"] = category
-    
-    st.write("🔍 Debug: Categorized Transactions")
-    st.dataframe(df)  # ✅ Show categorized data to debug
 
     return df
 
@@ -91,7 +90,7 @@ if df is not None and not df.empty:
     # Categorize transactions before processing
     df = categorize_transactions(df)
 
-    # 💰 Budget Section
+    # Budget Section
     budget = st.number_input("💰 Set Monthly Budget (PKR)", min_value=0, value=5000)
 
     # Detect subscriptions
@@ -104,11 +103,11 @@ if df is not None and not df.empty:
     else:
         st.success(f"✅ You are within your budget of PKR {budget}.")
 
-    # 📊 Show Spending Data
+    #Show Spending Data
     st.write(f"### 💰 Total Subscription Spending: PKR {total_spent:.2f}")
     st.dataframe(sub_df)
 
-    # 📊 Category-wise Spending
+    #Category-wise Spending
     if "Category" in df.columns:
         category_spending = df.groupby("Category")["Amount"].sum()
         if not category_spending.empty:
@@ -119,7 +118,7 @@ if df is not None and not df.empty:
     else:
         st.write("⚠️ Error: 'Category' column is missing.")
 
-    # 📅 Monthly Subscription Spending
+    # Monthly Subscription Spending
     if not sub_df.empty:
         sub_df["Month"] = sub_df["Date"].dt.to_period("M")
         monthly_spending = sub_df.groupby("Month")["Amount"].sum()
