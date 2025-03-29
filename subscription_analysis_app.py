@@ -95,7 +95,7 @@ if df is not None and not df.empty:
     total_spent = sub_df["Amount"].sum() if not sub_df.empty else 0
 
     # 📅 Monthly Spending Summary
-    df["Month"] = df["Date"].dt.to_period("M")
+    df["Month"] = df["Date"].dt.strftime("%b %Y")  # Ensure proper month format
     monthly_spending = df.groupby("Month")["Amount"].sum().reset_index()
     monthly_spending.columns = ["Month", "Total Spent"]
     
@@ -115,7 +115,7 @@ if df is not None and not df.empty:
     
     # 📅 Monthly Subscription Spending
     if not sub_df.empty:
-        sub_df["Month"] = sub_df["Date"].dt.to_period("M")
+        sub_df["Month"] = sub_df["Date"].dt.strftime("%b %Y")  # Ensure proper month format
         monthly_subscription_spending = sub_df.groupby("Month")["Amount"].sum()
         
         if not monthly_subscription_spending.empty:
