@@ -7,7 +7,7 @@ import streamlit as st
 def extract_transactions_from_pdf(pdf_file):
     transactions = []
     date_pattern = r"(\d{1,2} \w{3}, \d{4})"
-    amount_pattern = r"([-+]?\d{1,3}(?:,\d{3})*\.\d{2})"
+    amount_pattern = r"([-+]\d{1,3}(?:,\d{3})*\.\d{2})"
 
     with pdfplumber.open(pdf_file) as pdf:
         for page in pdf.pages:
@@ -20,11 +20,11 @@ def extract_transactions_from_pdf(pdf_file):
 
                     if date_match and amount_match:
                         date = date_match.group(1)
-                        amount = amount_match[-1].replace(",", "")
+                        amount = float(amount_match[-1].replace(",", ""))
                         description = line.replace(date, "").strip()
                         description = re.sub(amount_pattern, "", description).strip()
 
-                        transactions.append([date, description, float(amount)])
+                        transactions.append([date, description, amount])
 
     df = pd.DataFrame(transactions, columns=["Date", "Description", "Amount"])
     df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
@@ -94,10 +94,12 @@ if df is not None and not df.empty:
     sub_df = detect_subscriptions(df)
     total_spent = sub_df["Amount"].sum() if not sub_df.empty else 0
 
-    # 📅 Monthly Spending Summary
+    # 📅 Monthly Spending Summary (Only Debited Amounts)
+    df = df[df["Amount"] < 0]  # Only consider negative amounts (expenses)
     df["Month"] = df["Date"].dt.to_period("M")
     monthly_spending = df.groupby("Month")["Amount"].sum().reset_index()
     monthly_spending.columns = ["Month", "Total Spent"]
+    monthly_spending["Total Spent"] = monthly_spending["Total Spent"].abs()  # Convert to positive values
 
     # 📅 Display Monthly Spending Table
     st.write("### 📅 Monthly Spending Summary")
@@ -115,7 +117,7 @@ if df is not None and not df.empty:
 
     # 📊 Category-wise Spending
     if "Category" in df.columns:
-        category_spending = df.groupby("Category")["Amount"].sum()
+        category_spending = df.groupby("Category")["Amount"].sum().abs()
         if not category_spending.empty:
             st.write("### 📊 Spending by Category")
             st.bar_chart(category_spending)
