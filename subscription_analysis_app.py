@@ -7,7 +7,7 @@ import streamlit as st
 def extract_transactions_from_pdf(pdf_file):
     transactions = []
     date_pattern = r"(\d{1,2} \w{3}, \d{4})"
-    amount_pattern = r"([-+]?\d{1,3}(?:,\d{3})*\.\d{2})"
+    amount_pattern = r"([-]?\d{1,3}(?:,\d{3})*\.\d{2})"
 
     with pdfplumber.open(pdf_file) as pdf:
         for page in pdf.pages:
@@ -95,7 +95,7 @@ if df is not None and not df.empty:
     total_spent = sub_df["Amount"].sum() if not sub_df.empty else 0
 
     # 📅 Monthly Spending Summary (Only Debited Amounts)
-    df = df[df["Amount"] < 0] if df["Amount"].dtype != "object" else df[df["Description"].str.contains("DR", na=False)]
+    df = df[df["Amount"] < 0]  # Ensure only debits are considered
     df["Month"] = df["Date"].dt.to_period("M")
     monthly_spending = df.groupby("Month")["Amount"].sum().reset_index()
     monthly_spending.columns = ["Month", "Total Spent"]
