@@ -39,11 +39,10 @@ def categorize_transactions(df):
         "Shopping": ["amazon", "ebay"],
         "Utilities": ["electric", "water", "internet"],
     }
-    df["Category"] = "Other"  # Default category
+    df["Category"] = "Other"
     for category, keywords in categories.items():
         mask = df["Description"].str.lower().str.contains("|".join(keywords), case=False, na=False)
         df.loc[mask, "Category"] = category
-
     return df
 
 # Function to detect subscriptions
@@ -55,10 +54,10 @@ def detect_subscriptions(df):
 # Streamlit UI
 st.title("📊 Subscription Spending Tracker")
 
-# 💰 **Budget Input (Moved to the Top)**
-budget = st.number_input("💰 Set Monthly Budget (PKR)", min_value=0, value=0)
+# 💰 Budget Section
+budget = st.number_input("💰 Set Monthly Budget (PKR)", min_value=0, value=5000)
 
-# User Input Option (Now AFTER Budget Selection)
+# User Input Option
 option = st.radio("📥 Select input method:", ("Upload PDF", "Upload CSV", "Enter Manually"))
 
 df = None  # Placeholder for DataFrame
@@ -90,10 +89,10 @@ elif option == "Enter Manually":
 if df is not None and not df.empty:
     # Categorize transactions before processing
     df = categorize_transactions(df)
-
+    
     # Detect subscriptions
     sub_df = detect_subscriptions(df)
-    total_spent = sub_df["Amount"].sum() if not sub_df.empty else 0  # ✅ Prevent undefined variable error
+    total_spent = sub_df["Amount"].sum() if not sub_df.empty else 0
 
     # Show warning if over budget
     if total_spent > budget:
@@ -105,6 +104,13 @@ if df is not None and not df.empty:
     st.write(f"### 💰 Total Subscription Spending: PKR {total_spent:.2f}")
     st.dataframe(sub_df)
 
+    # 📊 Monthly Spending Summary
+    df["Month"] = df["Date"].dt.to_period("M")
+    monthly_spending = df.groupby("Month")["Amount"].sum()
+
+    st.write("### 📅 Monthly Spending Summary")
+    st.bar_chart(monthly_spending)
+
     # 📊 Category-wise Spending
     if "Category" in df.columns:
         category_spending = df.groupby("Category")["Amount"].sum()
@@ -115,14 +121,3 @@ if df is not None and not df.empty:
             st.write("No categorized transactions available.")
     else:
         st.write("⚠️ Error: 'Category' column is missing.")
-
-    # 📅 Monthly Subscription Spending (Fixed Month Formatting ✅)
-    if not sub_df.empty:
-        sub_df["Month"] = sub_df["Date"].dt.strftime("%b %Y")  # ✅ Format as "Jan 2024", "Feb 2024"
-        monthly_spending = sub_df.groupby("Month")["Amount"].sum()
-
-        if not monthly_spending.empty:
-            st.write("### 📅 Monthly Subscription Spending")
-            st.bar_chart(monthly_spending)  # ✅ Bar chart with proper months!
-        else:
-            st.write("No monthly spending data available.")
