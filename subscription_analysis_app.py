@@ -4,7 +4,7 @@ import re
 import streamlit as st
 import base64
 
-# Function to extract transactions from PDF
+
 def extract_transactions_from_pdf(pdf_file):
     transactions = []
     date_pattern = r"(\d{1,2} \w{3}, \d{4})"
@@ -33,7 +33,7 @@ def extract_transactions_from_pdf(pdf_file):
 
     return df
 
-# Function to categorize transactions
+
 def categorize_transactions(df):
     categories = {
         "Entertainment": ["netflix", "spotify", "youtube", "disney+"],
@@ -46,7 +46,7 @@ def categorize_transactions(df):
         df.loc[mask, "Category"] = category
     return df
 
-# Function to detect subscriptions
+
 def detect_subscriptions(df):
     subscription_keywords = ["netflix", "spotify", "amazon prime", "youtube premium", "apple music", "hulu", "disney+", "patreon"]
     df["is_subscription"] = df["Description"].str.contains('|'.join(subscription_keywords), case=False, na=False)
@@ -72,15 +72,15 @@ def add_local_background(image_file):
 # Call the function before rendering Streamlit elements
 add_local_background("BACKGROUND.jpg")  # Change this to your actual file name
 # Streamlit UI
-st.title("📊 Subscription Spending Tracker")
+st.title("Subscription Spending Tracker")
 
-# 💰 Budget Section
+
 budget = st.number_input("💰 Set Monthly Budget (PKR)", min_value=0, value=5000)
 
 # User Input Option
 option = st.radio("📥 Select input method:", ("Upload PDF", "Upload CSV", "Enter Manually"))
 
-df = None  # Placeholder for DataFrame
+df = None  
 
 if option == "Upload PDF":
     pdf_file = st.file_uploader("📂 Upload your bank statement (PDF)", type=["pdf"])
@@ -105,35 +105,35 @@ elif option == "Enter Manually":
         df["Amount"] = pd.to_numeric(df["Amount"], errors="coerce")
         df.dropna(inplace=True)
 
-# Ensure df is available before processing
+
 if df is not None and not df.empty:
-    # Categorize transactions before processing
+    
     df = categorize_transactions(df)
     
-    # Detect subscriptions
+    
     sub_df = detect_subscriptions(df)
     total_spent = sub_df["Amount"].sum() if not sub_df.empty else 0
 
-    # 📅 Monthly Spending Summary
+    
     df["Month"] = df["Date"].dt.strftime("%b %Y")  # Ensure proper month format
     monthly_spending = df.groupby("Month")["Amount"].sum().reset_index()
     monthly_spending.columns = ["Month", "Total Spent"]
     
-    # 📅 Display Monthly Spending Table
+  
     st.write("### 📅 Monthly Spending Summary")
     st.dataframe(monthly_spending)
     
-    # 🚨 Budget Exceeded Check
+   
     budget_exceeded = monthly_spending[monthly_spending["Total Spent"] > budget]
     if not budget_exceeded.empty:
         st.warning("⚠️ Budget exceeded for the following months:")
         st.dataframe(budget_exceeded)
     
-    # 📊 Show Subscription Spending Data
+    
     st.write(f"### 💰 Total Subscription Spending: PKR {total_spent:.2f}")
     st.dataframe(sub_df)
     
-    # 📅 Monthly Subscription Spending
+   
     if not sub_df.empty:
         sub_df["Month"] = sub_df["Date"].dt.strftime("%b %Y")  # Ensure proper month format
         monthly_subscription_spending = sub_df.groupby("Month")["Amount"].sum()
@@ -142,7 +142,7 @@ if df is not None and not df.empty:
             st.write("### 📅 Monthly Subscription Spending")
             st.bar_chart(monthly_subscription_spending)
     
-    # 📊 Category-wise Spending
+    
     category_spending = df.groupby("Category")["Amount"].sum()
     if not category_spending.empty:
         st.write("### 📊 Spending by Category")
