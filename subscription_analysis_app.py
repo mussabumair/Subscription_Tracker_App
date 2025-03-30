@@ -70,7 +70,7 @@ def add_local_background(image_file):
     )
 
 # Call the function before rendering Streamlit elements
-add_local_background("BACKGROUNG.jpg")  # Change this to your actual file name
+add_local_background("BACKGROUND.jpg")  # Change this to your actual file name
 # Streamlit UI
 st.title("📊 Subscription Spending Tracker")
 
